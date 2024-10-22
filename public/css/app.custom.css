@@ -1,0 +1,9 @@
+/*# sourceMappingURL=app.custom.css.map */
+body .daterangepicker td.off.disabled.hold {
+    background: yellow !important;
+    color: #000 !important;
+}
+body .daterangepicker td.off.disabled.housefull {
+    background: red !important;
+    color: #000 !important;
+}

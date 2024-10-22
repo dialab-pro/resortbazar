@@ -1,0 +1,20 @@
+Run this command in database =>
+
+ALTER TABLE bravo_hotel_room_bookings
+ADD COLUMN vendor_service_fee_amount DECIMAL(20,2),
+ADD COLUMN vendor_service_fee TEXT;
+ADD COLUMN total_before_fees DECIMAL(20,2),
+ADD COLUMN buyer_fees TEXT;
+
+
+
+
+ALTER TABLE bravo_hotel_rooms
+ADD COLUMN enable_extra_price TINYINT,
+ADD COLUMN extra_price TEXT;
+ADD COLUMN enable_service_fee TINYINT,
+ADD COLUMN service_fee TEXT;
+
+
+
+
