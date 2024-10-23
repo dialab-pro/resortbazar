@@ -182,8 +182,9 @@ class AgentController extends FrontendController {
     {
         $this->checkPermission('dashboard_agent_access');
         $user_id = Auth::id();
+        $is_agent = "1";
         $data = [
-            'cards_report'       => $this->booking->getTopCardsReportForVendor($user_id),
+            'cards_report'       => $this->booking->getTopCardsReportForVendor($user_id, $is_agent),
             'earning_chart_data' => $this->booking->getEarningChartDataForVendor(strtotime('monday this week'), time(), $user_id),
             'page_title'         => __("Agent Dashboard"),
             'breadcrumbs'        => [
