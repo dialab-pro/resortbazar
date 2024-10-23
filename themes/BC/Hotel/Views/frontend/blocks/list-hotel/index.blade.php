@@ -35,10 +35,8 @@
 
 
             <div class="text-center">
-                {{-- link_title
-                 --}}
-                <a href="{{ $link_more }}" class="btn btn-default">
-                    {{ $link_title }}
+                <a href="{{ $link_more ?? "#" }}" class="btn btn-default">
+                    {{ $link_title ?? '' }}
                 </a>
 
             </div>

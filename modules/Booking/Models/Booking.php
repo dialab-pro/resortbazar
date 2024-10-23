@@ -488,7 +488,15 @@ class Booking extends BaseModel {
     public static function getTopCardsReportForVendor($user_id){
 
         $res = [];
-        $total_money = parent::selectRaw('sum( `total_before_fees` - `commission` + `vendor_service_fee_amount` ) AS total_price , sum( CASE WHEN `status` = "completed" THEN `total_before_fees` - `commission` + `vendor_service_fee_amount` ELSE NULL END ) AS total_earning')->whereNotIn('status',static::$notAcceptedStatus)->where("vendor_id", $user_id)->first();
+        $total_money = parent::selectRaw(
+            'sum( `total_before_fees` - `commission` + COALESCE(`vendor_service_fee_amount`, 0) ) AS total_price,
+             sum( CASE WHEN `status` = "completed" THEN `total_before_fees` - `commission` + COALESCE(`vendor_service_fee_amount`, 0) ELSE NULL END ) AS total_earning'
+            )
+            ->whereNotIn('status', static::$notAcceptedStatus)
+            ->where("vendor_id", $user_id)
+            ->first();
+
+        // dd($total_money);
         $total_booking = parent::whereNotIn('status',static::$notAcceptedStatus)->where("vendor_id", $user_id)->count('id');
         $total_service = 0;
         $services = get_bookable_services();

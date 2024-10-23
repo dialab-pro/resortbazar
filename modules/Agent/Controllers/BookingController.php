@@ -1,5 +1,6 @@
 <?php
-    namespace Modules\Agent\Controllers;
+
+namespace Modules\Agent\Controllers;
 
 use App\Helpers\ReCaptchaEngine;
 use App\User;
@@ -22,7 +23,8 @@ use Modules\Booking\Models\BookingPassenger;
 use Modules\User\Events\SendMailUserRegistered;
 
 
-class BookingController extends FrontendController {
+class BookingController extends FrontendController
+{
 
 
     use AuthorizesRequests;
@@ -31,11 +33,13 @@ class BookingController extends FrontendController {
     protected $enquiryClass;
     protected $bookingInst;
 
-    public function __construct(Booking $booking, Enquiry $enquiryClass){
+    public function __construct(Booking $booking, Enquiry $enquiryClass)
+    {
         $this->booking = $booking;
         $this->enquiryClass = $enquiryClass;
     }
-    public function index(Request $request){
+    public function index(Request $request)
+    {
 
         $this->checkPermission('booking_manage_agent');
 
@@ -57,16 +61,15 @@ class BookingController extends FrontendController {
 
 
         return view('Agent::frontend.booking.index', $data);
-
-
     }
-    public function makeBooked(Request $request){
+    public function makeBooked(Request $request)
+    {
 
         $template = Template::where('id', 1)->first();
         $type = 'agent_booking_search_form';
         $model = $request->input('model', [
-            'title'=>'Hi There!',
-            'sub_title'=>'Where would you like to go?',
+            'title' => 'Hi There!',
+            'sub_title' => 'Where would you like to go?',
             'service_types' => [
                 "hotel",
                 "space",
@@ -90,7 +93,8 @@ class BookingController extends FrontendController {
      * @return string json
      * @todo Handle Add To Cart Validate
      */
-    public function addToCart(Request $request){
+    public function addToCart(Request $request)
+    {
 
         if (!is_enable_guest_checkout() and !Auth::check()) {
             return $this->sendError(__("You have to login in to do this"))->setStatusCode(401);
@@ -130,7 +134,8 @@ class BookingController extends FrontendController {
 
         return $service->addToCart($request);
     }
-    protected function validateCheckout($code){
+    protected function validateCheckout($code)
+    {
 
         if (!is_enable_guest_checkout() and !Auth::check()) {
             $error = __("You have to login in to do this");
@@ -153,7 +158,8 @@ class BookingController extends FrontendController {
         return true;
     }
 
-    public function checkout($code) {
+    public function checkout($code)
+    {
 
         $res = $this->validateCheckout($code);
 
@@ -181,7 +187,8 @@ class BookingController extends FrontendController {
         return view('Agent::frontend.booking.checkout', $data);
     }
 
-    public function checkStatusCheckout($code){
+    public function checkStatusCheckout($code)
+    {
         $booking = $this->booking::where('code', $code)->first();
         $data = [
             'error'    => false,
@@ -209,7 +216,8 @@ class BookingController extends FrontendController {
         return response()->json($data, 200);
     }
     // doCheckout
-    protected function validateDoCheckout(){
+    protected function validateDoCheckout()
+    {
         $request = \request();
         if (!is_enable_guest_checkout() and !Auth::check()) {
             return $this->sendError(__("You have to login in to do this"))->setStatusCode(401);
@@ -241,7 +249,8 @@ class BookingController extends FrontendController {
         return true;
     }
 
-    public function doCheckout(Request $request){
+    public function doCheckout(Request $request)
+    {
 
         /**
          * @var $booking Booking
@@ -294,7 +303,7 @@ class BookingController extends FrontendController {
             $rules['email'] = ['email', 'max:255', Rule::unique('users')];
             $messages['password.confirmed'] = __('The password confirmation does not match');
             $messages['password.min'] = __('The password must be at least 6 characters');
-        }else{
+        } else {
             $rules['customer_id'] = 'required';
             $messages['customer_id.required'] = __('Please Select Customer');
         }
@@ -384,9 +393,7 @@ class BookingController extends FrontendController {
                 Log::warning("SendMailUserRegistered: " . $exception->getMessage());
             }
             $customer->assignRole(setting_item('user_role'));
-
-
-        }else{
+        } else {
 
             $customer_id = $request->input('customer_id');
 
@@ -403,7 +410,6 @@ class BookingController extends FrontendController {
 
             $booking->address = $customer->address;
             $booking->address2 = $customer->address2;
-
         }
 
 
@@ -428,7 +434,6 @@ class BookingController extends FrontendController {
                     $booking->wallet_total_used = floatval($wallet_total_used);
                     $booking->wallet_credit_used = money_to_credit($wallet_total_used, true);
                 }
-
             }
 
             $booking->pay_now = max(0, $booking->pay_now - $wallet_total_used);
@@ -456,7 +461,6 @@ class BookingController extends FrontendController {
                 $transaction = $user->withdraw($booking->wallet_credit_used, [
                     'wallet_total_used' => $booking->wallet_total_used
                 ], $booking->id);
-
             } catch (\Exception $exception) {
                 return $this->sendError($exception->getMessage());
             }
@@ -504,12 +508,11 @@ class BookingController extends FrontendController {
                 'url' => $booking->getDetailUrl()
             ], __("You payment has been processed successfully"));
         }
-
-
     }
 
 
-    protected function savePassengers(Booking $booking, Request $request){
+    protected function savePassengers(Booking $booking, Request $request)
+    {
         if ($totalPassenger = $booking->calTotalPassenger()) {
             $booking->passengers()->delete();
             $input = $request->input('passengers', []);
@@ -528,15 +531,31 @@ class BookingController extends FrontendController {
         }
     }
 
-    public function detail(Request $request, $code){
-
+    public function detail(Request $request, $code)
+    {
         if (!is_enable_guest_checkout() and !Auth::check()) {
             return $this->sendError(__("You have to login in to do this"))->setStatusCode(401);
         }
 
         $booking = $this->booking::where('code', $code)->first();
+        // dd($booking, $request->all());
         if (empty($booking)) {
             abort(404);
+        }
+
+        if ($request->transId) {
+            $payment = $booking->payment;
+            if ($payment) {
+                $payment->status = 'completed';
+                $payment->save();
+            }
+            try {
+                $booking->paid += (float) $booking->pay_now;
+                $booking->markAsPaid(Booking::CONFIRMED);
+
+            } catch (\Swift_TransportException $e) {
+                Log::warning($e->getMessage());
+            }
         }
 
         if ($booking->status == 'draft') {
@@ -556,7 +575,8 @@ class BookingController extends FrontendController {
 
         return view('Agent::frontend/booking/detail', $data);
     }
-    public function bookingInvoice($code){
+    public function bookingInvoice($code)
+    {
         $booking = Booking::where('code', $code)->first();
 
         $user_id = Auth::id();
@@ -587,7 +607,8 @@ class BookingController extends FrontendController {
         ];
         return view('Agent::frontend.bookingInvoice', $data);
     }
-    public function ticket($code = ''){
+    public function ticket($code = '')
+    {
         $booking = Booking::where('code', $code)->first();
         $user_id = Auth::id();
         if (empty($booking)) {
@@ -603,5 +624,4 @@ class BookingController extends FrontendController {
         ];
         return view('User::frontend.booking.ticket', $data);
     }
-
 }

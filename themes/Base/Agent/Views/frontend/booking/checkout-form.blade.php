@@ -5,7 +5,7 @@
 
             <div class="col-12" style="margin-bottom:15px">
 
-                <label class="d-block" for="customer_id">Select Customer</label>
+                <label class="d-block" for="customer_id">Select Customer kio</label>
                 @php
                     $user = !empty(Request()->vendor_id) ? App\User::find(Request()->vendor_id) : false;
 
@@ -27,6 +27,7 @@
 
             </div>
 
+            <input type="hidden" name="booking_from" value="agent">
 
             @if(is_enable_guest_checkout() && is_enable_registration())
                 <div class="col-12">

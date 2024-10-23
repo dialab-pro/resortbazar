@@ -7,6 +7,7 @@
     <div class="bravo-user-dashboard">
         <div class="row dashboard-price-info row-eq-height">
             @if(!empty($cards_report))
+            {{-- @dd($cards_report); --}}
                 @foreach($cards_report as $item)
                     <div class="col-lg-3 col-md-3">
                         <div class="dashboard-item">

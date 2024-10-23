@@ -67,8 +67,8 @@ class EkpayGateway extends BaseGateway
 
     public function process(Request $request, $booking, $service)
     {
+        // dd(json_encode($request->all()), json_encode($service), json_encode($booking));
         $customer = User::find($request->customer_id);
-        // dd($request->all(),$customer, $booking);
         if (in_array($booking->status, [
             $booking::PAID,
             $booking::COMPLETED,
@@ -94,6 +94,7 @@ class EkpayGateway extends BaseGateway
         } catch (\Exception $e) {
             Log::warning($e->getMessage());
         }
+        $bookingSuccessUrl = $request->booking_from == 'agent' ? request()->root() .'/agent/booking/detail/' . $booking->code: $this->getReturnUrl();
         $client = new Client();
         $post_data = [
             'mer_info' => [
@@ -104,14 +105,14 @@ class EkpayGateway extends BaseGateway
             'feed_uri' => [
                 'c_uri' => $this->getCancelUrl() . '?c=' . $booking->code,
                 'f_uri' => $this->getReturnUrl() . '?c=' . $booking->code,
-                's_uri' =>  $this->getReturnUrl() ,
+                's_uri' =>  $bookingSuccessUrl ,
             ],
             'cust_info' => [
                 'cust_email' => $request['email'] ?? $customer->email,
                 'cust_id' => 'sample_id',
                 'cust_mail_addr' => $request['address_line_1'] ?? $customer->address ?? "Dhaka",
                 'cust_mobo_no' => $request['phone'] ?? $customer->phone,
-                'cust_name' => $request['first_name'] . '' . $request['last_name'] ?? $customer->name,
+                'cust_name' =>  $customer->name ?? $request['first_name'] . '' . $request['last_name'],
             ],
             'trns_info' => [
                 'ord_det' => 'order-details',
@@ -128,7 +129,6 @@ class EkpayGateway extends BaseGateway
             'mac_addr' => "1.1.1.1",
         ];
 
-
         $response = $client->post('https://sandbox.ekpay.gov.bd/ekpaypg/v1/merchant-api', [
             'headers' => [
                 'Content-Type' => 'application/json',
@@ -139,9 +139,6 @@ class EkpayGateway extends BaseGateway
         $response_data = json_decode($response->getBody(), true);
         $redirect_url = "https://sandbox.ekpay.gov.bd/ekpaypg/v1?sToken=" . $response_data['secure_token'] . "&trnsID=" . $booking->code;
         // dd($redirect_url,$response_data);
-
-
-
         response()->json([
             'url' => $redirect_url,
         ])->send();

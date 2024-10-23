@@ -26,7 +26,7 @@
                     data:$('.booking-form').find('input,textarea,select').serialize(),
                     method:"post",
                     success:function (res) {
-
+                        console.log("from admin",res);
                         if(!res.status && !res.url){
                             me.onSubmit = false;
                         }

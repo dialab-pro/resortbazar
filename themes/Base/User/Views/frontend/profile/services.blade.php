@@ -9,7 +9,7 @@ $list_service = [];
             @php $i = 0; @endphp
             @foreach($types as $type=>$moduleClass)
                 @php
-                    if($type == "flight")  continue;
+                    if($type == "flight" || $type == "boat")  continue;
                     if(!$moduleClass::isEnable()) continue;
                     if(!$user->hasPermission($type.'_create')) continue;
                     $services = $moduleClass::getVendorServicesQuery($user->id)->orderBy('id','desc')->paginate(6);
@@ -27,7 +27,7 @@ $list_service = [];
         @php $i = 0; @endphp
         @foreach($types as $type=>$moduleClass)
             @php
-                if($type == "flight")  continue;
+                if($type == "flight" || $type== "boat")  continue;
                 if(!$moduleClass::isEnable()) continue;
                 if(empty($list_service[$type])) continue;
             @endphp
